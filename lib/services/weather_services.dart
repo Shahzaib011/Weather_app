@@ -27,4 +27,24 @@ class WeatherService {
       throw Exception('Failed to load weather data');
     }
   }
+  static Future<List<String>> searchCities(String query) async {
+    if (query.isEmpty) return [];
+
+    final url = Uri.parse(
+      'http://api.weatherapi.com/v1/search.json?key=$_apiKey&q=$query',
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      return data
+          .map<String>((city) => city['name'].toString())
+          .toSet()
+          .toList();
+    } else {
+      throw Exception('Failed to fetch city suggestions');
+    }
+  }
+
 }

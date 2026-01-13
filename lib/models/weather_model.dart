@@ -34,4 +34,30 @@ class WeatherModel {
       windKph: (json['current']['wind_kph'] ?? 0).toDouble(),
     );
   }
+
+
+  Map<String, dynamic> toJson() {
+    return {
+      'city': city,
+      'tempC': tempC,
+      'condition': condition,
+      'icon': icon,
+      'feelsLikeC': feelsLikeC,
+      'humidity': humidity,
+      'windKph': windKph,
+    };
+  }
+
+  factory WeatherModel.fromLocalJson(Map<String, dynamic> json) {
+    return WeatherModel(
+      city: json['city'],
+      tempC: (json['tempC']).toDouble(),
+      condition: json['condition'],
+      icon: json['icon'],
+      feelsLikeC: (json['feelsLikeC']).toDouble(),
+      humidity: json['humidity'],
+      windKph: (json['windKph']).toDouble(),
+    );
+  }
+
 }

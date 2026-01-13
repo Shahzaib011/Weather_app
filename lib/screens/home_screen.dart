@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
-import '../services/weather_services.dart';
-import '../widgets/loading_widget.dart';
-import '../widgets/error_widget.dart';
-import '../widgets/weather_card.dart';
+import '../widgets/narrow_weather_tile.dart';
+import 'search_city_sheet.dart';
+import 'weather_detail_screen.dart';
+import '../services/local_stroage_services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,92 +13,103 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  WeatherModel? weather;
-  bool isLoading = false;
-  String? errorMessage;
-  final TextEditingController _cityController = TextEditingController(text: "London");
+  final List<WeatherModel> _savedCities = [];
 
+  void _openSearchSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SearchCitySheet(
+        onCitySelected: (WeatherModel weather) {
+          Navigator.pop(context); // close bottom sheet
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => WeatherDetailScreen(
+                weather: weather,
+                onSave: () async {
+                  if (!_savedCities.any((w) => w.city == weather.city)) {
+                    setState(() {
+                      _savedCities.add(weather);
+                    });
+                    await LocalStorageService.saveCities(_savedCities);
+                  }
+                },
+
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
   @override
   void initState() {
     super.initState();
-    _fetchWeather(_cityController.text);
+    _loadSavedCities();
   }
 
-  Future<void> _fetchWeather(String city) async {
+  Future<void> _loadSavedCities() async {
+    final cities = await LocalStorageService.loadCities();
     setState(() {
-      isLoading = true;
-      errorMessage = null;
+      _savedCities.addAll(cities);
     });
-
-    try {
-      final data = await WeatherService.fetchWeather(city);
-      setState(() {
-        weather = data;
-      });
-    } catch (e) {
-      setState(() {
-        errorMessage = e.toString();
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
   }
 
-  void _searchCity() {
-    final city = _cityController.text.trim();
-    if (city.isNotEmpty) {
-      _fetchWeather(city);
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Weather App"),
-        centerTitle: true,
+      backgroundColor: Colors.black,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        onPressed: _openSearchSheet,
+        child: const Icon(Icons.add, color: Colors.black),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // City input
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _cityController,
-                    decoration: const InputDecoration(
-                      labelText: "City",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _searchCity,
-                  child: const Text("Search"),
-                ),
-              ],
+      body: SafeArea(
+        child: _savedCities.isEmpty
+            ? const Center(
+          child: Text(
+            "No saved cities",
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 16,
             ),
-            const SizedBox(height: 20),
+          ),
+        )
+            : ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: _savedCities.length,
+          itemBuilder: (context, index) {
+            final weather = _savedCities[index];
 
-            // Loading/Error/Weather
-            Expanded(
-              child: Center(
-                child: isLoading
-                    ? const LoadingWidget()
-                    : errorMessage != null
-                    ? CustomErrorWidget(message: errorMessage!, onRetry: () {  },)
-                    : weather != null
-                    ? WeatherCard(weather: weather!)
-                    : const Text("Enter a city to get weather"),
+            return Dismissible(
+              key: Key(weather.city),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(Icons.delete, color: Colors.white),
               ),
-            ),
-          ],
-        ),
+              onDismissed: (_) async {
+                setState(() {
+                  _savedCities.removeAt(index);
+                });
+                await LocalStorageService.saveCities(_savedCities);
+              },
+              child: NarrowWeatherTile(weather: weather),
+            );
+          },
+        )
+
       ),
     );
   }
