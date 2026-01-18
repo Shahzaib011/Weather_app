@@ -23,10 +23,17 @@ class NarrowWeatherTile extends StatelessWidget {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(18),
+          color: Colors.white, // clean white card
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -37,17 +44,18 @@ class NarrowWeatherTile extends StatelessWidget {
                   Text(
                     weather.city,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     weather.condition,
                     style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
+                      color: Colors.black54,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -55,12 +63,20 @@ class NarrowWeatherTile extends StatelessWidget {
                 ],
               ),
             ),
-            Text(
-              '${weather.tempC.round()}°',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w400,
+            Container(
+              padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0F0FF), // light blue accent
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${weather.tempC.round()}°',
+                style: const TextStyle(
+                  color: Color(0xFF007AFF),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
